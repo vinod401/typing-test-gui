@@ -63,13 +63,13 @@ class App(Tk):
         elif event.keysym == "BackSpace":
             print("backspace")
 
-        # if the
-        elif event.char:
+        # if valid char other than space
+        elif event.char and event.char != " ":
             self.update_text_box()
 
     def update_text_box(self):
         self.text_box.config(state="normal")
-        print(self.word_in_entry)
+        print("invoked")
         self.text_box.config(state="disabled")
 
 
