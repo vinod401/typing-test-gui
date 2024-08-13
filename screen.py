@@ -1,4 +1,5 @@
 from tkinter import *
+
 TEXTBOX_FONT = ("arial", 18, "bold")
 ENTRY_BOX_FONT = ("arial", 15, "normal")
 
