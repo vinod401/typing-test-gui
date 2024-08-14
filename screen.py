@@ -100,11 +100,25 @@ class App(Tk):
 
         # if the backspace key is triggered
         elif event.keysym == "BackSpace":
-            print("backspace")
+            self.back_space()
 
         # if valid char other than space
         elif event.char and event.char != " ":
             self.update_text_box()
+
+    def back_space(self):
+        self.text_box.config(state="normal")
+
+        letter = self.text_box.get(f"1.{self.character_index + len(self.word_in_entry)}",
+                                   f"1.{self.character_index + len(self.word_in_entry) + 1}")
+
+        self.text_box.delete(f"1.{self.character_index + len(self.word_in_entry)}",
+                             f"1.{self.character_index + len(self.word_in_entry) + 1}")
+
+        self.text_box.insert(f"1.{self.character_index + len(self.word_in_entry)}",
+                             letter, "current_word")
+
+        self.text_box.config(state="disabled")
 
     def next_word(self):
 
@@ -152,7 +166,6 @@ class App(Tk):
 
         # if the typed word have characters more than the original word it is considered as wrongly typed
         if len(self.word_in_entry) > len(type_test.word_list[type_test.word_index]):
-
             self.text_box.delete(f"1.{self.character_index}",
                                  f"1.{self.character_index + len(type_test.word_list[type_test.word_index])}")
 
