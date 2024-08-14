@@ -40,6 +40,29 @@ class App(Tk):
         # all keys are bind to the function key_press
         self.key = self.entry_box.bind("<KeyRelease>", self.key_press)
 
+    def configure_text(self):
+        """function to configure text style """
+
+        self.text_box.tag_configure("current_word", background="green", foreground="white")
+        self.text_box.tag_configure("correct_word", background="white", foreground="green")
+        self.text_box.tag_configure("incorrect_word", background="white", foreground="red")
+
+        self.text_box.tag_configure("letter_wrong", background="green", foreground="red")
+        self.text_box.tag_configure("letter_correct", background="green", foreground="yellow")
+
+    def display_text(self):
+        """this function displays the text to type in the text box"""
+        self.text_box.insert(END, type_test.generated_text)
+
+        self.text_box.delete(f"1.{self.character_index}",
+                             f"1.{self.character_index + len(type_test.word_list[type_test.word_index])}")
+
+        self.text_box.insert(f"1.{self.character_index}",
+                             type_test.word_list[type_test.word_index], "current_word")
+
+        self.text_box.config(state="disabled")
+
+
     def clear_entry(self):
         """function clears the entry box"""
 
