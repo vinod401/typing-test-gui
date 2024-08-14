@@ -1,9 +1,15 @@
 from tkinter import *
+from typed_word import TypedWord
+from text_to_type import TypeTest
 
 TEXTBOX_FONT = ("arial", 18, "bold")
 ENTRY_BOX_FONT = ("arial", 15, "normal")
 
-sample_text = "The invention of Braille"
+# to track user typed words
+user_words = TypedWord()
+
+# the text to type
+type_test = TypeTest()
 
 
 class App(Tk):
@@ -15,9 +21,13 @@ class App(Tk):
 
         # the text box displays the text to be typed
         self.text_box = Text(self, height=4, font=TEXTBOX_FONT, wrap=WORD)
+        self.configure_text()
         self.text_box.pack()
-        self.text_box.insert(END, sample_text)
-        self.text_box.config(state="disabled")
+
+        # variable the tracks the cursor location
+        self.character_index = 0
+
+        self.display_text()
 
         # the entry box the user can type
         char = self.register(self.avoid_space)
@@ -32,14 +42,15 @@ class App(Tk):
 
     def clear_entry(self):
         """function clears the entry box"""
+
         self.entry_box.delete(first=0, last=END)
 
     def avoid_space(self, input_char):
         """this function make sure that there is no blank space in front of the text in the entry box"""
 
         # the entry box won't accept a blank space in front of a word
-        # each word should start with a valid character not blank space
-        if input_char == " ":
+        # each word should start with a valid character not blank space and no blank space is allowed inbetween word
+        if " " in input_char:
             return False
 
         return True
@@ -57,8 +68,10 @@ class App(Tk):
         # clears the entry box and set the word in entry to empty string
         elif self.word_in_entry and event.char == " ":
             print(self.word_in_entry)
+
+            user_words.push(word=self.word_in_entry)
             self.clear_entry()
-            self.word_in_entry = ""
+            user_words.print_stack()
 
         # if the backspace key is triggered
         elif event.keysym == "BackSpace":
@@ -70,9 +83,5 @@ class App(Tk):
 
     def update_text_box(self):
         self.text_box.config(state="normal")
-        print("invoked")
+        print(self.word_in_entry)
         self.text_box.config(state="disabled")
-
-
-
-

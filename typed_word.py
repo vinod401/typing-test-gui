@@ -1,10 +1,9 @@
-class WordTyped:
+class TypedWord:
     def __init__(self):
         self.typed_stack = []
 
     def print_stack(self):
-        for i in range(len(self.typed_stack) - 1, -1, -1):
-            print(self.typed_stack[i])
+        print(self.typed_stack)
 
     def is_empty(self):
         return len(self.typed_stack) == 0
@@ -18,8 +17,8 @@ class WordTyped:
     def size(self):
         return len(self.typed_stack)
 
-    def push(self, value):
-        self.typed_stack.append(value)
+    def push(self, word):
+        self.typed_stack.append(word)
 
     def pop(self):
         if self.is_empty():
