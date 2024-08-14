@@ -52,16 +52,19 @@ class App(Tk):
 
     def display_text(self):
         """this function displays the text to type in the text box"""
+
+        # insert the generated text for the test in the text box
         self.text_box.insert(END, type_test.generated_text)
 
+        # highlight the first word
         self.text_box.delete(f"1.{self.character_index}",
                              f"1.{self.character_index + len(type_test.word_list[type_test.word_index])}")
 
         self.text_box.insert(f"1.{self.character_index}",
                              type_test.word_list[type_test.word_index], "current_word")
 
+        # disable text box to avoid unnecessary interactions
         self.text_box.config(state="disabled")
-
 
     def clear_entry(self):
         """function clears the entry box"""
@@ -90,11 +93,10 @@ class App(Tk):
         # space key is accepted only the word_in_entry have at least a valid character
         # clears the entry box and set the word in entry to empty string
         elif self.word_in_entry and event.char == " ":
-            print(self.word_in_entry)
-
             user_words.push(word=self.word_in_entry)
             self.clear_entry()
-            user_words.print_stack()
+            self.next_word()
+            # user_words.print_stack()
 
         # if the backspace key is triggered
         elif event.keysym == "BackSpace":
@@ -104,7 +106,71 @@ class App(Tk):
         elif event.char and event.char != " ":
             self.update_text_box()
 
+    def next_word(self):
+
+        self.text_box.config(state="normal")
+
+        # delete the current word
+        self.text_box.delete(f"1.{self.character_index}",
+                             f"1.{self.character_index + len(type_test.word_list[type_test.word_index])}")
+
+        # checks the entered word is correct or wrong and update the text box with indication
+        if self.word_in_entry == type_test.word_list[type_test.word_index]:
+
+            self.text_box.insert(f"1.{self.character_index}",
+                                 type_test.word_list[type_test.word_index], "correct_word")
+        else:
+            self.text_box.insert(f"1.{self.character_index}",
+                                 type_test.word_list[type_test.word_index], "incorrect_word")
+
+        # update the cursor position
+        # add the length of the previous word
+        self.character_index = self.character_index + len(type_test.word_list[type_test.word_index]) + 1
+
+        # update the word index
+        type_test.word_index += 1
+
+        # check whether the words to type are over
+        if type_test.word_index != len(type_test.word_list):
+
+            # highlight the next word to type
+            self.text_box.delete(f"1.{self.character_index}",
+                                 f"1.{self.character_index + len(type_test.word_list[type_test.word_index])}")
+
+            self.text_box.insert(f"1.{self.character_index}",
+                                 type_test.word_list[type_test.word_index], "current_word")
+
+        # if there is no more word to type disable the entry box and unbind the keys
+        else:
+            self.entry_box.config(state="disabled")
+            self.entry_box.unbind("<Key>", self.key)
+
+        self.text_box.config(state="disabled")
+
     def update_text_box(self):
         self.text_box.config(state="normal")
-        print(self.word_in_entry)
+
+        # if the typed word have characters more than the original word it is considered as wrongly typed
+        if len(self.word_in_entry) > len(type_test.word_list[type_test.word_index]):
+
+            self.text_box.delete(f"1.{self.character_index}",
+                                 f"1.{self.character_index + len(type_test.word_list[type_test.word_index])}")
+
+            self.text_box.insert(f"1.{self.character_index}",
+                                 type_test.word_list[type_test.word_index], "letter_wrong")
+            return
+
+        # check each letter if typed correct
+        for i in range(len(self.word_in_entry)):
+            self.text_box.delete(f"1.{self.character_index + i}",
+                                 f"1.{self.character_index + i + 1}")
+
+            if self.word_in_entry[i] == type_test.word_list[type_test.word_index][i]:
+
+                self.text_box.insert(f"1.{self.character_index + i}",
+                                     type_test.word_list[type_test.word_index][i], "letter_correct")
+            else:
+                self.text_box.insert(f"1.{self.character_index + i}",
+                                     type_test.word_list[type_test.word_index][i], "letter_wrong")
+
         self.text_box.config(state="disabled")
