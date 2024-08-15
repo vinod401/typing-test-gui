@@ -3,6 +3,7 @@ class TypeTest:
     def __init__(self):
         self.word_list = []
         self.word_index = 0
+        self.typed_word_length = 0
         self.generated_text = None
 
         self.generate_text()

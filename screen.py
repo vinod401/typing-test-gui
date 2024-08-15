@@ -107,18 +107,107 @@ class App(Tk):
             self.update_text_box()
 
     def back_space(self):
+
+        # if type_test.typed_word_length is None
         self.text_box.config(state="normal")
 
-        letter = self.text_box.get(f"1.{self.character_index + len(self.word_in_entry)}",
-                                   f"1.{self.character_index + len(self.word_in_entry) + 1}")
+        # if the length is less than zero then the highlight must move to the previous word
+        if type_test.typed_word_length <= 0:
+            self.previous_word()
+            return
 
-        self.text_box.delete(f"1.{self.character_index + len(self.word_in_entry)}",
-                             f"1.{self.character_index + len(self.word_in_entry) + 1}")
+        # if the word in the entry box is correctly typed
+        if self.entry_box.get().strip() == type_test.word_list[type_test.word_index]:
+            self.text_box.delete(f"1.{self.character_index}",
+                                 f"1.{self.character_index + len(type_test.word_list[type_test.word_index])}")
 
-        self.text_box.insert(f"1.{self.character_index + len(self.word_in_entry)}",
-                             letter, "current_word")
+            self.text_box.insert(f"1.{self.character_index}",
+                                 type_test.word_list[type_test.word_index], "letter_correct")
+
+        # if the wor din the entry box is not correct but with in the length of the correct word
+        elif type_test.typed_word_length <= len(type_test.word_list[type_test.word_index]):
+            # the for loop is used to tackle the situation that the user may remove letters
+            # inbetween using arrows and mouse
+            # so a for loop can update the word every time a change is made
+            # the for loop updates the correctly and wrongly typed letters in each backspace trigger
+            for i in range(len(self.word_in_entry)):
+                self.text_box.delete(f"1.{self.character_index + i}",
+                                     f"1.{self.character_index + i + 1}")
+
+                if self.word_in_entry[i] == type_test.word_list[type_test.word_index][i]:
+                    self.text_box.insert(f"1.{self.character_index + i}",
+                                         type_test.word_list[type_test.word_index][i], "letter_correct")
+
+                else:
+                    self.text_box.insert(f"1.{self.character_index + i}",
+                                         type_test.word_list[type_test.word_index][i], "letter_wrong")
+
+            # the number character remaining to type is increased in each backspace trigger, so it should be updated
+            # the for loop only updates one character less to the number of characters typed in the entry box
+            # so the remaining one should be updated to not typed
+            letter = self.text_box.get(f"1.{self.character_index + len(self.word_in_entry)}",
+                                       f"1.{self.character_index + len(self.word_in_entry) + 1}")
+
+            # also it is necessary to ensure the letter is not a blank space
+            if letter != " ":
+                self.text_box.delete(f"1.{self.character_index + len(self.word_in_entry)}",
+                                     f"1.{self.character_index + len(self.word_in_entry) + 1}")
+
+                self.text_box.insert(f"1.{self.character_index + len(self.word_in_entry)}",
+                                     letter, "current_word")
 
         self.text_box.config(state="disabled")
+
+        # update the length of the characters in the entry box
+        type_test.typed_word_length = len(self.word_in_entry)
+
+    def previous_word(self):
+
+        if user_words.peek():
+            # remove the highlight from the current word
+            self.text_box.delete(f"1.{self.character_index}",
+                                 f"1.{self.character_index + len(type_test.word_list[type_test.word_index])}")
+
+            self.text_box.insert(f"1.{self.character_index}",
+                                 type_test.word_list[type_test.word_index])
+
+            # update the word index by subtracting 1 so that it  points to the previous word
+            type_test.word_index -= 1
+
+            # update the character index to the beginning of the previous word
+            self.character_index = self.character_index - len(type_test.word_list[type_test.word_index]) - 1
+
+            # clear any entries in the entry box
+            self.clear_entry()
+
+            # pop the last completed word typed  from the user_words and display it in the entry box
+            self.entry_box.insert(END, user_words.pop())
+
+            # update the word in entry
+            self.word_in_entry = self.entry_box.get()
+
+            # # update the length of the characters in the entry box
+            type_test.typed_word_length = len(self.word_in_entry)
+
+            # delete the previous word and make it current
+            self.text_box.delete(f"1.{self.character_index}",
+                                 f"1.{self.character_index + len(type_test.word_list[type_test.word_index])}")
+
+            # compare the word in entry with the original word and show indication on is it correct or not
+            # the word is still active but already completed
+
+            # if the word is correct
+            if self.word_in_entry == type_test.word_list[type_test.word_index]:
+
+                self.text_box.insert(f"1.{self.character_index}",
+                                     type_test.word_list[type_test.word_index], "letter_correct")
+
+            # apart from the incorrect word
+            # this can handle if the typed character is greater or less than the original word
+            else:
+                self.text_box.insert(f"1.{self.character_index}",
+                                     type_test.word_list[type_test.word_index], "current_word")
+                self.update_text_box()
 
     def next_word(self):
 
@@ -159,10 +248,17 @@ class App(Tk):
             self.entry_box.config(state="disabled")
             self.entry_box.unbind("<Key>", self.key)
 
+        # this code helps when the user navigate to next word and did not start typing
+        # and decided to navigate to previous word
+        # this becomes irrelevant when the user started typing the next word
+        type_test.typed_word_length = -1
+
         self.text_box.config(state="disabled")
 
     def update_text_box(self):
         self.text_box.config(state="normal")
+
+        type_test.typed_word_length = len(self.word_in_entry)
 
         # if the typed word have characters more than the original word it is considered as wrongly typed
         if len(self.word_in_entry) > len(type_test.word_list[type_test.word_index]):
@@ -173,7 +269,8 @@ class App(Tk):
                                  type_test.word_list[type_test.word_index], "letter_wrong")
             return
 
-        # check each letter if typed correct
+        # check each letter is typed correct and give color indication
+        # red for wrongly typed letter and yellow for correct
         for i in range(len(self.word_in_entry)):
             self.text_box.delete(f"1.{self.character_index + i}",
                                  f"1.{self.character_index + i + 1}")
