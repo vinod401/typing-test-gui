@@ -118,14 +118,23 @@ class App(Tk):
 
         # if the word in the entry box is correctly typed
         if self.entry_box.get().strip() == type_test.word_list[type_test.word_index]:
+
             self.text_box.delete(f"1.{self.character_index}",
                                  f"1.{self.character_index + len(type_test.word_list[type_test.word_index])}")
 
             self.text_box.insert(f"1.{self.character_index}",
                                  type_test.word_list[type_test.word_index], "letter_correct")
 
-        # if the wor din the entry box is not correct but with in the length of the correct word
-        elif type_test.typed_word_length <= len(type_test.word_list[type_test.word_index]):
+        # if the word in the entry box is not correct but with in the length of the correct word
+        elif len(self.entry_box.get().strip()) <= len(type_test.word_list[type_test.word_index]):
+
+            # update it as current word
+            self.text_box.delete(f"1.{self.character_index}",
+                                 f"1.{self.character_index + len(type_test.word_list[type_test.word_index])}")
+
+            self.text_box.insert(f"1.{self.character_index}",
+                                 type_test.word_list[type_test.word_index], "current_word")
+
             # the for loop is used to tackle the situation that the user may remove letters
             # inbetween using arrows and mouse
             # so a for loop can update the word every time a change is made
@@ -141,20 +150,6 @@ class App(Tk):
                 else:
                     self.text_box.insert(f"1.{self.character_index + i}",
                                          type_test.word_list[type_test.word_index][i], "letter_wrong")
-
-            # the number character remaining to type is increased in each backspace trigger, so it should be updated
-            # the for loop only updates one character less to the number of characters typed in the entry box
-            # so the remaining one should be updated to not typed
-            letter = self.text_box.get(f"1.{self.character_index + len(self.word_in_entry)}",
-                                       f"1.{self.character_index + len(self.word_in_entry) + 1}")
-
-            # also it is necessary to ensure the letter is not a blank space
-            if letter != " ":
-                self.text_box.delete(f"1.{self.character_index + len(self.word_in_entry)}",
-                                     f"1.{self.character_index + len(self.word_in_entry) + 1}")
-
-                self.text_box.insert(f"1.{self.character_index + len(self.word_in_entry)}",
-                                     letter, "current_word")
 
         self.text_box.config(state="disabled")
 
