@@ -2,7 +2,7 @@ from tkinter import *
 from typed_word import TypedWord
 from text_to_type import TypeTest
 
-TEXTBOX_FONT = ("arial", 18, "bold")
+TEXTBOX_FONT = ("arial", 40, "bold")
 ENTRY_BOX_FONT = ("arial", 15, "normal")
 
 # to track user typed words
@@ -20,7 +20,7 @@ class App(Tk):
         self.title('Type Test')
 
         # the text box displays the text to be typed
-        self.text_box = Text(self, height=4, font=TEXTBOX_FONT, wrap=WORD)
+        self.text_box = Text(self, width=50, height=3, font=TEXTBOX_FONT, wrap=WORD, padx=50, pady=50)
         self.configure_text()
         self.text_box.pack()
 
@@ -37,9 +37,13 @@ class App(Tk):
         # the word in entry tracks the character in entered in the entry box
         self.word_in_entry = ""
 
+
         # all keys are bind to the function key_press
         self.key = self.entry_box.bind("<KeyRelease>", self.key_press)
 
+    def scroll(self):
+
+        self.text_box.yview_scroll(1, "units")
     def configure_text(self):
         """function to configure text style """
 
@@ -62,6 +66,7 @@ class App(Tk):
 
         self.text_box.insert(f"1.{self.character_index}",
                              type_test.word_list[type_test.word_index], "current_word")
+
 
         # disable text box to avoid unnecessary interactions
         self.text_box.config(state="disabled")
@@ -247,6 +252,10 @@ class App(Tk):
         # and decided to navigate to previous word
         # this becomes irrelevant when the user started typing the next word
         type_test.typed_word_length = -1
+
+        # scroll to next line is the visible part is over
+        if self.text_box.dlineinfo(f"1.{self.character_index}") is None:
+            self.scroll()
 
         self.text_box.config(state="disabled")
 
