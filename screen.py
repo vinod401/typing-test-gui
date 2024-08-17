@@ -28,6 +28,7 @@ class App(Tk):
         # variable the tracks the cursor location
         self.character_index = 0
 
+        # display the text to type in the text box
         self.display_text()
 
         # the entry box the user can type
@@ -41,8 +42,7 @@ class App(Tk):
         # all keys are bind to the function key_press
         self.key = self.entry_box.bind("<KeyRelease>", self.key_press)
 
-    def scroll(self):
-        self.text_box.yview_scroll(1, "units")
+        self.timer_on = False
 
     def configure_text(self):
         """function to configure text style """
@@ -83,9 +83,11 @@ class App(Tk):
         if " " in input_char:
             return False
 
+        self.start_timer()
         return True
 
     def key_press(self, event):
+        """handles every key release in the keyboard"""
 
         # every time a key is pressed the word_in_entry is updated
         self.word_in_entry = self.entry_box.get().strip()
@@ -111,7 +113,7 @@ class App(Tk):
             self.update_text_box()
 
     def back_space(self):
-
+        """function handles all the backspace trigger"""
         # if type_test.typed_word_length is None
         self.text_box.config(state="normal")
 
@@ -161,7 +163,7 @@ class App(Tk):
         type_test.typed_word_length = len(self.word_in_entry)
 
     def previous_word(self):
-
+        """navigates to the previous word"""
         if user_words.peek():
             # remove the highlight from the current word
             self.text_box.delete(f"1.{self.character_index}",
@@ -209,8 +211,7 @@ class App(Tk):
                 self.update_text_box()
 
     def next_word(self):
-
-        track = self.text_box.dlineinfo(f"1.{self.character_index}")
+        """navigates to the next word and also check the previous word is correctly typed or not"""
         self.text_box.config(state="normal")
 
         # delete the current word
@@ -259,10 +260,12 @@ class App(Tk):
         if not self.text_box.dlineinfo(f"1.{self.character_index}"):
             self.text_box.yview_scroll(1, "units")
 
-
     def update_text_box(self):
+        """this function updated the letters of current word with the appropriate indicate correct wrong not typed"""
+
         self.text_box.config(state="normal")
 
+        # the length of the word in the entry box is updated in each click
         type_test.typed_word_length = len(self.word_in_entry)
 
         # if the typed word have characters more than the original word it is considered as wrongly typed
@@ -289,3 +292,13 @@ class App(Tk):
                                      type_test.word_list[type_test.word_index][i], "letter_wrong")
 
         self.text_box.config(state="disabled")
+
+    def start_timer(self):
+        """start the timer"""
+
+        # the timer is activated when the first valid character is typed in the
+        if len(self.word_in_entry) < 1 and not self.timer_on:
+            self.timer_on = True
+            print("activate timer")
+
+
