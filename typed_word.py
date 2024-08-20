@@ -28,3 +28,7 @@ class TypedWord:
         self.typed_stack.pop(-1)
 
         return temp
+
+    def make_empty(self):
+        while self.size():
+            self.pop()

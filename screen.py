@@ -4,8 +4,7 @@ from text_to_type import TypeTest
 import time
 
 TEXTBOX_FONT = ("arial", 30, "bold")
-ENTRY_BOX_FONT = ("arial", 15, "normal")
-
+ENTRY_BOX_FONT = ("arial", 20, "bold")
 # to track user typed words
 user_words = TypedWord()
 
@@ -19,6 +18,10 @@ class App(Tk):
 
         # configure the root window
         self.title('Type Test')
+
+        # displays the time
+        self.time_label = Label(self, text="10")
+        self.time_label.pack()
 
         # the text box displays the text to be typed
         self.text_box = Text(self, width=30, height=2, font=TEXTBOX_FONT, wrap=WORD, padx=50, pady=50)
@@ -36,13 +39,20 @@ class App(Tk):
         self.entry_box = Entry(self, font=ENTRY_BOX_FONT, validate="key", validatecommand=(char, '%P'))
         self.entry_box.pack()
 
+        self.restart = Button(text="Restart", command=self.restart_typing)
+        self.restart.pack()
+
         # the word in entry tracks the character in entered in the entry box
         self.word_in_entry = ""
 
         # all keys are bind to the function key_press
         self.key = self.entry_box.bind("<KeyRelease>", self.key_press)
 
+        # to track state of timer
         self.timer_on = False
+
+        # timer id
+        self.timer = None
 
     def configure_text(self):
         """function to configure text style """
@@ -83,7 +93,9 @@ class App(Tk):
         if " " in input_char:
             return False
 
-        self.start_timer()
+        if not self.timer_on:
+            self.start_timer()
+
         return True
 
     def key_press(self, event):
@@ -245,9 +257,9 @@ class App(Tk):
                                  type_test.word_list[type_test.word_index], "current_word")
 
         # if there is no more word to type disable the entry box and unbind the keys
+        # as this condition is triggered in the time count method this is no more needed
         else:
-            self.entry_box.config(state="disabled")
-            self.entry_box.unbind("<Key>", self.key)
+            self.stop_typing()
 
         # this code helps when the user navigate to next word and did not start typing
         # and decided to navigate to previous word
@@ -293,12 +305,71 @@ class App(Tk):
 
         self.text_box.config(state="disabled")
 
+    def clock_count(self, count):
+        """the function keeps the time and check all the possible triggers to end typing test in each second"""
+
+        # when the user completes typing  all the word given in the text box
+        # the entry box will already be disabled and self.timer_on will be made falase
+        if not self.timer_on:
+
+            self.tying_test_end()
+
+        # if the time reached the limit
+        elif count <= 0:
+
+            self.time_label.config(text=f"00")
+            self.stop_typing()
+            self.tying_test_end()
+
+        # update the count
+        else:
+            if count < 10:
+                self.time_label.config(text=f"0{count}")
+            else:
+                self.time_label.config(text=count)
+
+            self.timer = self.after(1000, self.clock_count, count-1)
+
     def start_timer(self):
         """start the timer"""
-
         # the timer is activated when the first valid character is typed in the
         if len(self.word_in_entry) < 1 and not self.timer_on:
             self.timer_on = True
-            print("activate timer")
+            self.clock_count(10)
+            # print("activate timer")
+
+    def stop_typing(self):
+        """stops the test stop accepting keys"""
+        self.entry_box.config(state="disabled")
+        self.entry_box.unbind("<Key>", self.key)
+        self.timer_on = False
+
+    def tying_test_end(self):
+        """display the result"""
+        pass
+
+    def restart_typing(self):
+        """the function will set to the default starting state of the test"""
+
+        # make every thing to the default value so that the user can start from first
+        self.timer_on = False
+
+        self.after_cancel(self.timer)
+        self.character_index = 0
+        self.word_in_entry = ""
+
+        self.time_label.config(text=10)
+
+        user_words.make_empty()
+        type_test.rest_default()
+
+        self.text_box.config(state="normal")
+        self.text_box.delete(0.0, END)
+        self.display_text()
+
+        self.entry_box.config(state="normal")
+        self.key = self.entry_box.bind("<KeyRelease>", self.key_press)
+
+        self.clear_entry()
 
 
