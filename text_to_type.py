@@ -6,6 +6,9 @@ class TypeTest:
         # to track the characters typed for current word for every new word it starts with zero
         self.typed_word_length = 0
 
+        # to track the time
+        self.time = 0
+
         self.generated_text = None
         self.generate_text()
 
