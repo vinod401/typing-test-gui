@@ -2,9 +2,11 @@ class TypeTest:
     def __init__(self):
         self.word_list = []
         self.word_index = 0
-        self.typed_word_length = 0
-        self.generated_text = None
 
+        # to track the characters typed for current word for every new word it starts with zero
+        self.typed_word_length = 0
+
+        self.generated_text = None
         self.generate_text()
 
     def generate_text(self):
@@ -21,5 +23,7 @@ class TypeTest:
         self.word_list = self.generated_text.strip().split(" ")
 
     def rest_default(self):
+
         self.word_index = 0
         self.typed_word_length = 0
+
