@@ -9,6 +9,9 @@ class TypeTest:
         # to track the time
         self.time = 0
 
+        self.total_characters_typed = 0
+        self.mistakes_typed = 0
+
         self.generated_text = None
         self.generate_text()
 
@@ -29,4 +32,8 @@ class TypeTest:
 
         self.word_index = 0
         self.typed_word_length = 0
+        self.total_characters_typed = 0
+        self.mistakes_typed = 0
+
+        self.time = 0
 

@@ -5,36 +5,43 @@ import time
 
 TEXTBOX_FONT = ("arial", 30, "bold")
 ENTRY_BOX_FONT = ("arial", 20, "bold")
+
 # time in seconds
-TIME = 100
+TIME_MAX = 60
+FONT = ("arial", 12, "bold")
+BUTTON_FONT = ("arial", 10, "bold")
+COLOR = "gray"
+
 # to track user typed words
 user_words = TypedWord()
 
 # the text to type
 type_test = TypeTest()
 
-
-class App(Tk):
+class APP(Tk):
     def __init__(self):
         super().__init__()
 
         # configure the root window
         self.title('Type Test')
-
+        self.config(padx=10, pady=10)
         # displays the time
-        self.time_label = Label(self, text=f"Time Left : {TIME}")
-        self.time_label.pack()
+        self.time_label = Label(self, text=f"Time Left : {TIME_MAX}", font=FONT, foreground=COLOR)
+        self.time_label.grid(row=0, column=0, sticky="w")
 
-        self.cpm = Label(self, text="CPM : 00")
-        self.cpm.pack()
+        self.gross_word_per_min = Label(self, text="GROSS WPM : 00", font=FONT, foreground=COLOR)
+        self.gross_word_per_min.grid(row=0, column=1)
 
-        self.correct_cpm = Label(self, text="Corrected CPM : 00")
-        self.correct_cpm.pack()
+        self.net_word_per_minute = Label(self, text="NET WPM : 00", font=FONT, foreground=COLOR)
+        self.net_word_per_minute.grid(row=0, column=2)
+
+        self.accuracy = Label(self, text="Accuracy : 00", font=FONT, foreground=COLOR)
+        self.accuracy.grid(row=0, column=3)
 
         # the text box displays the text to be typed
         self.text_box = Text(self, width=30, height=2, font=TEXTBOX_FONT, wrap=WORD, padx=50, pady=50)
         self.configure_text()
-        self.text_box.pack()
+        self.text_box.grid(row=1, column=0, columnspan=4)
 
         # variable the tracks the cursor location
         self.character_index = 0
@@ -44,18 +51,21 @@ class App(Tk):
 
         # the entry box the user can type
         char = self.register(self.avoid_space)
-        self.entry_box = Entry(self, font=ENTRY_BOX_FONT, validate="key", validatecommand=(char, '%P'),)
-        self.entry_box.pack()
+        self.entry_box = Entry(self, font=ENTRY_BOX_FONT, validate="key", validatecommand=(char, '%P'),
+                               relief="solid")
+        self.entry_box.grid(row=2, column=1, padx=5, pady=10, sticky="e")
 
         # the user can restart typying using the restart button the button will reset everything to start again
-        self.restart = Button(text="Restart", command=self.restart_typing, state="disabled")
-        self.restart.pack()
+        self.restart = Button(text="Restart", command=self.restart_typing,
+                              background="blue", foreground="white", font=BUTTON_FONT, pady=5, padx=5)
+        self.restart.grid(row=2, column=2)
 
         # the word in entry tracks the character in entered in the entry box
         self.word_in_entry = ""
 
         # all keys are bind to the function key_press
-        self.key = self.entry_box.bind("<KeyRelease>", self.key_press)
+        self.key_release_id = self.entry_box.bind("<KeyRelease>", self.key_release)
+        self.key_press_id = self.entry_box.bind("<KeyPress>", self.key_press)
 
         # to track state of timer
         self.timer_on = False
@@ -115,6 +125,16 @@ class App(Tk):
         return True
 
     def key_press(self, event):
+        """counts each key press other than special keys"""
+
+        if event.keysym == "BackSpace":
+            type_test.mistakes_typed += 1
+            type_test.total_characters_typed += 1
+
+        elif event.char:
+            type_test.total_characters_typed += 1
+
+    def key_release(self, event):
         """handles every key release in the keyboard"""
 
         # every time a key is pressed the word_in_entry is updated
@@ -128,11 +148,8 @@ class App(Tk):
         # clears the entry box and set the word in entry to empty string
         elif self.word_in_entry and event.char == " ":
             user_words.push(word=self.word_in_entry)
-
-            # adding the count of correctly typed characters typed
-            user_words.corrected_character_count += self.update_text_box()
-            print(f"wrong characters: {user_words.character_count - user_words.corrected_character_count}")
-
+            # adding the count of incorrectly typed characters
+            type_test.mistakes_typed += self.update_text_box()
             self.clear_entry()
             self.next_word()
 
@@ -143,9 +160,7 @@ class App(Tk):
 
         # if valid char other than space
         elif event.char and event.char != " ":
-            current_correct_letters = self.update_text_box()
-
-            self.update_meters(current_correct_letters)
+            self.update_meters(self.update_text_box())
 
     def back_space(self):
         """function handles all the backspace trigger"""
@@ -175,32 +190,6 @@ class App(Tk):
             self.text_box.insert(f"1.{self.character_index}",
                                  type_test.word_list[type_test.word_index], "current_word")
             self.update_text_box()
-
-        # if the word in the entry box is not correct but with in the length of the correct word
-        # elif len(self.entry_box.get().strip()) <= len(type_test.word_list[type_test.word_index]):
-        #
-        #     # update it as current word
-        #     self.text_box.delete(f"1.{self.character_index}",
-        #                          f"1.{self.character_index + len(type_test.word_list[type_test.word_index])}")
-        #
-        #     self.text_box.insert(f"1.{self.character_index}",
-        #                          type_test.word_list[type_test.word_index], "current_word")
-        #
-        #     # the for loop is used to tackle the situation that the user may remove letters
-        #     # inbetween using arrows and mouse
-        #     # so a for loop can update the word every time a change is made
-        #     # the for loop updates the correctly and wrongly typed letters in each backspace trigger
-        #     for i in range(len(self.word_in_entry)):
-        #         self.text_box.delete(f"1.{self.character_index + i}",
-        #                              f"1.{self.character_index + i + 1}")
-        #
-        #         if self.word_in_entry[i] == type_test.word_list[type_test.word_index][i]:
-        #             self.text_box.insert(f"1.{self.character_index + i}",
-        #                                  type_test.word_list[type_test.word_index][i], "letter_correct")
-        #
-        #         else:
-        #             self.text_box.insert(f"1.{self.character_index + i}",
-        #                                  type_test.word_list[type_test.word_index][i], "letter_wrong")
 
         self.text_box.config(state="disabled")
 
@@ -251,18 +240,13 @@ class App(Tk):
                 self.text_box.insert(f"1.{self.character_index}",
                                      type_test.word_list[type_test.word_index], "letter_correct")
 
-                # remove the correctly typed character count
-                user_words.corrected_character_count -= len(type_test.word_list[type_test.word_index])
-
             # this sets letters to current word
             # and then update text box is called to check the correction
             else:
                 self.text_box.insert(f"1.{self.character_index}",
                                      type_test.word_list[type_test.word_index], "current_word")
 
-                # remove the correctly typed character count
-                user_words.corrected_character_count -= self.update_text_box()
-                # self.update_text_box()
+                self.update_text_box()
 
     def next_word(self):
         """navigates to the next word and also check the previous word is correctly typed or not"""
@@ -319,7 +303,7 @@ class App(Tk):
 
     def update_text_box(self):
         """this function updated the letters of current word with the appropriate indicate correct wrong not typed the
-        function return number of correct characters typed"""
+        function return number of incorrect characters typed"""
 
         self.text_box.config(state="normal")
 
@@ -328,8 +312,8 @@ class App(Tk):
 
         # check each letter is typed correct and give color indication
         # red for wrongly typed letter and yellow for correct
-        correct_letter_count = 0
-        for i in range(len(self.word_in_entry)):
+        incorrect_letters = 0
+        for i in range(type_test.typed_word_length):
 
             try:
                 # check if i is valid index in the current word
@@ -348,7 +332,7 @@ class App(Tk):
                 self.text_box.insert(f"1.{self.character_index}",
                                      type_test.word_list[type_test.word_index], "letter_wrong")
 
-                return correct_letter_count
+                return incorrect_letters
 
             else:
 
@@ -357,70 +341,88 @@ class App(Tk):
                     self.text_box.insert(f"1.{self.character_index + i}",
                                          type_test.word_list[type_test.word_index][i], "letter_correct")
 
-                    correct_letter_count += 1
-
                 else:
                     self.text_box.insert(f"1.{self.character_index + i}",
                                          type_test.word_list[type_test.word_index][i], "letter_wrong")
+                    incorrect_letters += 1
 
         self.text_box.config(state="disabled")
 
-        return correct_letter_count
+        return incorrect_letters
 
-    def update_meters(self, count=0):
+    def update_meters(self, current_mistake=0):
 
         """function to update the measuring values"""
 
         # update character per minute
+        gross_wpm = int((type_test.total_characters_typed / 5) / (type_test.time / 60))
+        net_wpm = gross_wpm - int((((type_test.mistakes_typed + current_mistake) / 5) / (type_test.time / 60)))
 
-        self.cpm["text"] = "CPM : %02d" % (user_words.character_count+type_test.typed_word_length)
-        self.correct_cpm["text"] = "corrected CPM : %02d" % user_words.corrected_character_count
+        self.gross_word_per_min["text"] = "GROSS WPM : %02d" % gross_wpm
 
-    def clock_count(self, count):
+        self.net_word_per_minute["text"] = "NET WPM : %02d" % net_wpm
+
+        self.accuracy["text"] = "Accuracy : " + "%02d" % ((net_wpm / gross_wpm) * 100) + "%"
+
+    def clock_count(self):
         """the function keeps the time and check all the possible triggers to end typing test in each second"""
 
         # when the user completes typing  all the word given in the text box
-        # the entry box will already be disabled and self.timer_on will be made falase
+        # the entry box will already be disabled and self.timer_on will be made false
         if not self.timer_on:
-
             self.typing_test_end()
 
         # if the time reached the limit
-        elif count <= 0:
-            self.time_label["text"] = f"Time Left : 0{count}"
+        elif type_test.time >= TIME_MAX:
+            self.time_label["text"] = f"Time Left : 00"
             self.stop_typing()
-
             self.typing_test_end()
 
         # update the count
         else:
             # self.time_label["text"] = f"Time : 0{count}"
 
-            self.time_label["text"] = "Time Left : %02d" % count
-
-            self.timer = self.after(1000, self.clock_count, count - 1)
+            self.time_label["text"] = "Time Left : %02d" % abs(TIME_MAX - type_test.time)
+            type_test.time += 1
+            self.timer = self.after(1000, self.clock_count)
 
     def start_timer(self):
         """start the timer"""
         # the timer is activated when the first valid character is typed in the
         if len(self.word_in_entry) < 1 and not self.timer_on:
             self.timer_on = True
-            self.clock_count(TIME)
+            self.clock_count()
             self.restart.config(state="normal")
             # print("activate timer")
 
     def stop_typing(self):
         """stops the test stop accepting keys"""
         self.entry_box.config(state="disabled")
-        self.entry_box.unbind("<Key>", self.key)
+        self.entry_box.unbind("<KeyRelease>", self.key_release_id)
+        self.entry_box.unbind("<KeyPress>", self.key_press_id)
         self.timer_on = False
 
     def typing_test_end(self):
         """display the result"""
-        pass
+
+        self.update_meters()
+        print(f"Total Characters typed = {type_test.total_characters_typed}")
+        print(f"Mistakes = {type_test.mistakes_typed}")
+
+        # the gross word in one minute is the total number characters typed divided by 5 whole divided by the 60/60
+        # that is 1 if the user finishes the given number of character before 60 seconds  type_test.time / 60
+        gross_wpm = int((type_test.total_characters_typed / 5) / (type_test.time / 60))
+        net_wpm = gross_wpm - int(((type_test.mistakes_typed / 5) / (type_test.time / 60)))
+
+        print(f"Net WPM = {net_wpm}")
+        print(f"Gross WPM = {gross_wpm}")
+        print("Accuracy = " + "%02d" % ((net_wpm / gross_wpm) * 100) + "%")
 
     def restart_typing(self):
         """the function will set to the default starting state of the test"""
+
+        if not self.timer:
+            return
 
         # make every thing to the default value so that the user can start from first
         self.timer_on = False
@@ -431,8 +433,10 @@ class App(Tk):
         self.character_index = 0
         self.word_in_entry = ""
 
-        self.time_label.config(text=f"Time Left : {TIME}")
-        self.cpm["text"] = "CPM : 00"
+        self.time_label.config(text=f"Time Left : {TIME_MAX}")
+        self.gross_word_per_min["text"] = "GROSS WPM : 00"
+        self.net_word_per_minute["text"] = "NET WPM : 00"
+        self.accuracy["text"] = "Accuracy : 00"
         user_words.make_empty()
         type_test.rest_default()
 
@@ -441,6 +445,11 @@ class App(Tk):
         self.display_text()
 
         self.entry_box.config(state="normal")
-        self.key = self.entry_box.bind("<KeyRelease>", self.key_press)
+        self.key_release_id = self.entry_box.bind("<KeyRelease>", self.key_release)
+        self.key_press_id = self.entry_box.bind("<KeyPress>", self.key_press)
 
         self.clear_entry()
+
+
+class ResultPage:
+    pass
