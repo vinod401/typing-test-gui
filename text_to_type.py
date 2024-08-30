@@ -36,4 +36,5 @@ class TypeTest:
         self.mistakes_typed = 0
 
         self.time = 0
+        self.letter_nav = 0
 
