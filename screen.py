@@ -3,7 +3,6 @@ from tkinter import *
 from typed_word import TypedWord
 from text_to_type import TypeTest
 
-
 # test window constants
 TEXTBOX_FONT = ("arial", 30, "bold")
 ENTRY_BOX_FONT = ("arial", 20, "bold")
@@ -12,7 +11,6 @@ TIME_MAX = 60
 FONT = ("arial", 12, "bold")
 BUTTON_FONT = ("arial", 10, "bold")
 COLOR = "gray"
-
 
 # result window
 TEXT_COLOR = "#FFF4BD"
@@ -30,14 +28,21 @@ class WelcomeWindow(Frame):
         self.master = master
         self.master.title("Welcome")
 
-        start_button = Button(self.master, text="Start", command=self.go_to_test_page)
-        start_button.pack()
+        self.bg = PhotoImage(file="image_resource/Welcome-01.png")
+        self.canvas = Canvas(self.master, width=800, height=520)
+        self.canvas.place(x=0, y=0)
 
-        exit_button = Button(self.master, text="Exit", command=self.quit)
-        exit_button.pack()
+        self.canvas.create_image(400, 260, image=self.bg)
+
+        start_button = Button(self.master, text="Start", command=self.go_to_test_page, font=BUTTON_FONT,
+                              foreground="white", background=AVERAGE, pady=10, padx=10)
+        start_button.place(x=200, y=400)
+
+        exit_button = Button(self.master, text="Exit", command=self.quit, font=BUTTON_FONT,
+                             foreground="white", background=BAD, pady=10, padx=10)
+        exit_button.place(x=600, y=400)
 
     def go_to_test_page(self):
-
         for widget in self.master.winfo_children():
             widget.destroy()
 
@@ -95,11 +100,11 @@ class TestWindow(Frame):
 
         # the user can restart typying using the restart button the button will reset everything to start again
         self.restart_button = Button(self.master, text="Restart", command=self.restart_typing,
-                                     background="blue", foreground="white", font=BUTTON_FONT, pady=5, padx=5)
+                                     background=GOOD, foreground="white", font=BUTTON_FONT, pady=5, padx=5)
         self.restart_button.grid(row=2, column=2)
 
         self.quit_button = Button(self.master, text="Quit", width=6, command=self.quit_typing,
-                                  background="brown", foreground="white", font=BUTTON_FONT, pady=5, padx=5)
+                                  background=BAD, foreground="white", font=BUTTON_FONT, pady=5, padx=5)
         self.quit_button.grid(row=2, column=3)
 
         # the word in entry tracks the character in entered in the entry box
@@ -176,7 +181,7 @@ class TestWindow(Frame):
         if " " in input_char:
             return False
 
-        if not self.timer_on:
+        if not self.timer_on and self.timer is None:
             self.start_timer()
 
         return True
@@ -209,7 +214,7 @@ class TestWindow(Frame):
 
             # adding the count of incorrectly typed characters
             self.type_test.mistakes_typed += self.update_text_box()
-            print(self.type_test.mistakes_typed)
+
             self.clear_entry()
             self.next_word()
 
@@ -420,15 +425,28 @@ class TestWindow(Frame):
         """function to update the measuring values"""
 
         # update character per minute
-        gross_wpm = int((self.type_test.total_characters_typed / 5) / (self.type_test.time / 60))
-        net_wpm = gross_wpm - int(
-            (((self.type_test.mistakes_typed + current_mistake) / 5) / (self.type_test.time / 60)))
+
+        try:
+            gross_wpm = int((self.type_test.total_characters_typed / 5) / (self.type_test.time / 60))
+
+            net_wpm = gross_wpm - int(
+                (((self.type_test.mistakes_typed + current_mistake) / 5) / (self.type_test.time / 60)))
+
+        except ZeroDivisionError:
+            gross_wpm = 0
+            net_wpm = 0
 
         self.gross_word_per_min["text"] = "GROSS WPM : %02d" % gross_wpm
 
         self.net_word_per_minute["text"] = "NET WPM : %02d" % net_wpm
 
-        self.accuracy["text"] = "Accuracy : " + "%02d" % ((net_wpm / gross_wpm) * 100) + "%"
+        try:
+            accuracy = round(((net_wpm / gross_wpm) * 100))
+
+        except ZeroDivisionError:
+            accuracy = 0
+
+        self.accuracy["text"] = f"Accuracy : {accuracy}%"
 
     def clock_count(self):
         """the function keeps the time and check all the possible triggers to end typing test in each second"""
@@ -462,6 +480,7 @@ class TestWindow(Frame):
     def start_timer(self):
         """start the timer"""
         # the timer is activated when the first valid character is typed in the
+
         if len(self.word_in_entry) < 1 and not self.timer_on:
             self.timer_on = True
             self.clock_count()
@@ -479,17 +498,28 @@ class TestWindow(Frame):
         """display the result"""
 
         self.update_meters()
-        print(f"misktake :{self.type_test.mistakes_typed}")
+
         # the gross word in one minute is the total number characters typed divided by 5 whole divided by the 60/60
         # that is 1 if the user finishes the given number of character before 60 seconds  type_test.time / 60
-        gross_wpm = int((self.type_test.total_characters_typed / 5) / (self.type_test.time / 60))
-        net_wpm = gross_wpm - int(((self.type_test.mistakes_typed / 5) / (self.type_test.time / 60)))
-        accuracy = round(((net_wpm / gross_wpm) * 100))
+        try:
+            gross_wpm = int((self.type_test.total_characters_typed / 5) / (self.type_test.time / 60))
+            net_wpm = gross_wpm - int(((self.type_test.mistakes_typed / 5) / (self.type_test.time / 60)))
+
+        except ZeroDivisionError:
+            gross_wpm = 0
+            net_wpm = 0
+
+        try:
+            accuracy = round((net_wpm / gross_wpm) * 100)
+
+        except ZeroDivisionError:
+            accuracy = 0
 
         result = {
             "net": net_wpm,
             "gross": gross_wpm,
-            "accuracy": accuracy
+            "accuracy": accuracy,
+            "mistakes": self.type_test.mistakes_typed
         }
 
         self.go_to_result(result)
@@ -503,9 +533,6 @@ class TestWindow(Frame):
         # make every thing to the default value so that the user can start from first
         self.timer_on = False
 
-        # cancel the timer
-        self.after_cancel(self.timer)
-
         self.character_index = 0
         self.word_in_entry = ""
 
@@ -515,6 +542,7 @@ class TestWindow(Frame):
         self.gross_word_per_min["text"] = "GROSS WPM : 00"
         self.net_word_per_minute["text"] = "NET WPM : 00"
         self.accuracy["text"] = "Accuracy : 00"
+
         self.user_words.make_empty()
         self.type_test.rest_default()
 
@@ -528,27 +556,32 @@ class TestWindow(Frame):
 
         self.clear_entry()
 
+        # cancel the timer
+        self.after_cancel(self.timer)
+        self.timer = None
+
 
 class ResultWindow(Frame):
     def __init__(self, master, result):
         super().__init__()
         self.master = master
         self.master.title("Result")
+
         self.master.config(padx=20, pady=20)
 
         self.canvas = Canvas(self.master, width=620, height=400, )
-        self.canvas.grid(row=0, column=0, columnspan=2, padx=60, pady=20 )
+        self.canvas.grid(row=0, column=0, columnspan=2, padx=60, pady=20)
 
         self.bg = PhotoImage(file="image_resource/Result.png")
         self.bg_image = self.canvas.create_image(310, 200, image=self.bg)
 
-        self.retry_button = Button(text="I can Do Better !",  command=self.go_to_test_page )
-        self.retry_button.grid(row=1, column=0, padx=50,)
+        self.retry_button = Button(text="Try Again!", command=self.go_to_test_page,
+                                   foreground="white", background=GOOD, font=BUTTON_FONT, padx=10, pady=10)
+        self.retry_button.grid(row=1, column=0, padx=50, )
 
-        self.quit_button = Button(text="I Quit", command=self.quit)
+        self.quit_button = Button(text="I Quit", command=self.quit,
+                                  foreground="white", background=BAD, font=BUTTON_FONT, padx=10, pady=10)
         self.quit_button.grid(row=1, column=1, padx=50, )
-
-
 
         self.net = result["net"]
         self.gross = result["gross"]
@@ -559,18 +592,21 @@ class ResultWindow(Frame):
             self.accuracy_percentage = 0
             self.net = 0
 
+        elif result["accuracy"] == 100 and result["mistakes"] > 0:
+            self.accuracy_percentage = 99
+
         else:
             self.accuracy_percentage = result["accuracy"]
 
         self.process()
 
     def process(self):
-        print(self.accuracy_percentage)
+        """processing the result"""
         for x in range(self.accuracy_percentage + 1):
 
             if x >= 90:
                 outline_color = GOOD
-            elif x >= 60:
+            elif x >= 75:
                 outline_color = AVERAGE
             else:
                 outline_color = BAD
@@ -581,10 +617,11 @@ class ResultWindow(Frame):
                                                         style="arc", offset="center", outline=outline_color)
             accuracy_display = self.canvas.create_text(312, 208, text=f"{x}%", font=TEXT_FONT, fill=TEXT_COLOR)
 
-            net_wpm_display = self.canvas.create_text(208, 318, text=random.randint(0, self.gross+1), font=TEXT_FONT,
+            net_wpm_display = self.canvas.create_text(208, 318, text=random.randint(0, self.gross + 1), font=TEXT_FONT,
                                                       fill=TEXT_COLOR)
 
-            gross_wpm_display = self.canvas.create_text(540, 318, text=random.randint(0, self.gross+1), font=TEXT_FONT,
+            gross_wpm_display = self.canvas.create_text(540, 318, text=random.randint(0, self.gross + 1),
+                                                        font=TEXT_FONT,
                                                         fill=TEXT_COLOR)
 
             self.master.update()
@@ -620,7 +657,6 @@ class ResultWindow(Frame):
 
         self.destroy()
         TestWindow(self.master)
-
 
 # class APP(Tk):
 #     def __init__(self):
