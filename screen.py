@@ -1,6 +1,6 @@
 import random
 from tkinter import *
-from typed_word import TypedWord
+from typed_word import WordList
 from text_to_type import TypeTest
 
 # test window constants
@@ -27,12 +27,13 @@ class WelcomeWindow(Frame):
         super().__init__()
         self.master = master
         self.master.title("Welcome")
+        # self.master.config(padx=10, pady=10)
 
         self.bg = PhotoImage(file="image_resource/Welcome-01.png")
         self.canvas = Canvas(self.master, width=800, height=520)
         self.canvas.place(x=0, y=0)
 
-        self.canvas.create_image(400, 260, image=self.bg)
+        self.canvas.create_image( 400, 260,image=self.bg)
 
         start_button = Button(self.master, text="Start", command=self.go_to_test_page, font=BUTTON_FONT,
                               foreground="white", background=AVERAGE, pady=10, padx=10)
@@ -41,6 +42,8 @@ class WelcomeWindow(Frame):
         exit_button = Button(self.master, text="Exit", command=self.quit, font=BUTTON_FONT,
                              foreground="white", background=BAD, pady=10, padx=10)
         exit_button.place(x=600, y=400)
+
+
 
     def go_to_test_page(self):
         for widget in self.master.winfo_children():
@@ -55,7 +58,7 @@ class TestWindow(Frame):
         super().__init__()
 
         # to track user typed words
-        self.user_words = TypedWord()
+        self.user_words = WordList()
 
         # the text to type
         self.type_test = TypeTest()
@@ -63,11 +66,10 @@ class TestWindow(Frame):
         # configure the root window
         self.master = master
         self.master.title("Test")
-        self.master.config(padx=20, pady=20)
 
         # displays the time
         self.time_label = Label(self.master, text=f"Time Left : {TIME_MAX}", font=FONT, foreground=COLOR)
-        self.time_label.grid(row=0, column=0, sticky="w", pady=20)
+        self.time_label.grid(row=0, column=0, sticky="w", pady=20, padx=20)
 
         self.gross_word_per_min = Label(self.master, text="GROSS WPM : 00", font=FONT, foreground=COLOR)
         self.gross_word_per_min.grid(row=0, column=1, pady=20)
@@ -81,7 +83,7 @@ class TestWindow(Frame):
         # the text box displays the text to be typed
         self.text_box = Text(self.master, width=30, height=2, font=TEXTBOX_FONT, wrap=WORD, padx=50, pady=50)
         self.configure_text()
-        self.text_box.grid(row=1, column=0, columnspan=4, pady=50)
+        self.text_box.grid(row=1, column=0, columnspan=4, pady=50, padx=20)
 
         # variable the tracks the cursor location
         self.character_index = 0
@@ -89,7 +91,7 @@ class TestWindow(Frame):
         # display the text to type in the text box
         self.display_text()
 
-        self.type_here = Label(self.master, text="Start Typing  in the >")
+        self.type_here = Label(self.master, text="Start Typing  in the box >")
         self.type_here.grid()
 
         # the entry box the user can type
@@ -156,7 +158,8 @@ class TestWindow(Frame):
         """this function displays the text to type in the text box"""
 
         # insert the generated text for the test in the text box
-        self.text_box.insert(END, self.type_test.generated_text)
+        for word in self.type_test.word_list:
+            self.text_box.insert(END, f"{word} ")
 
         # highlight the first word
         self.text_box.delete(f"1.{self.character_index}",

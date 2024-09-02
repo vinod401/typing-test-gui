@@ -1,6 +1,12 @@
+import json
+import random
+from typed_word import WordList
+
 class TypeTest:
     def __init__(self):
-        self.word_list = []
+        self.stack = WordList()
+        self.word_list = self.stack.typed_stack
+
         self.word_index = 0
 
         # to track the characters typed for current word for every new word it starts with zero
@@ -18,15 +24,16 @@ class TypeTest:
     def generate_text(self):
         """the function generates random multi-lined text from the text_bank """
 
-        # for testing purpose
-        # self.generated_text = "the test string"
+        with open("typing_text.json") as file:
+            data = json.load(file)
 
-        self.generated_text = ("The invention of Braille was a major turning point in the history of disability. "
-                               "The writing system of raised dots used by visually impaired people was developed "
-                               "by Louis Braille in nineteenth-century France. In a society that did not value "
-                               "disabled people in general, blindness was particularly stigmatized, and lack of ")
+        index = str((random.randint(1, data["info"]["size"])))
 
-        self.word_list = self.generated_text.strip().split(" ")
+        generated_text = data["data"][index]
+
+        for word in generated_text.strip().split(" "):
+            if word.strip():
+                self.stack.push(word.strip())
 
     def rest_default(self):
 

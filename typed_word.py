@@ -1,4 +1,4 @@
-class TypedWord:
+class WordList:
     def __init__(self):
         # to track the words typed by the user
         self.typed_stack = []
